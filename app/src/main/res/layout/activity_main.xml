@@ -4,13 +4,15 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.jokerpeng.demo.picselector.MainActivity">
-    <GridView
+    <com.jokerpeng.demo.picselector.MyGridView
         android:id="@+id/gv_show_pic"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/btn_select_pic">
+        android:layout_above="@+id/btn_select_pic"
+        android:background="#000000"
+        >
 
-    </GridView>
+    </com.jokerpeng.demo.picselector.MyGridView>
    <Button
        android:id="@+id/btn_select_pic"
        android:layout_width="wrap_content"

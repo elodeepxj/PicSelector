@@ -1,47 +1,67 @@
 package com.jokerpeng.demo.picselector;
 
 import android.content.ContentResolver;
-import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.View;
-import android.widget.GridView;
-import android.widget.SimpleAdapter;
 import android.widget.Toast;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
-    private GridView mGv;
-    private List<Map<String,Objects>> mList;
-    private int mScreenHeight;
+    private MyGridView mGv;
+    private List<String> mList;
+    private PicAdapter mPicAdapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        CommonUtis.verifyOCRPermissions(this,CommonUtis.verifySdkVersion());
+        initView();
+        initData();
+        initAction();
 
-        DisplayMetrics outMetrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(outMetrics);
-        mScreenHeight = outMetrics.heightPixels;
-        getImages();
 
 
-        mGv = (GridView) findViewById(R.id.gv_show_pic);
-        findViewById(R.id.btn_select_pic).setOnClickListener(this);
+
+//        mPicAdapter = new PicAdapter(this);
+//        mGv.setAdapter(mPicAdapter);
+    }
+
+    private void initView() {
+        mGv = (MyGridView) findViewById(R.id.gv_show_pic);
+    }
+
+    private void initData() {
         mList = new ArrayList<>();
-        mGv.setAdapter(new SimpleAdapter(this,mList,R.layout.item_gridview,new String[]{"image"},new int[]{R.id.iv_item}));
+
+        DisplayMetrics dm = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(dm);
+        int w = dm.widthPixels/3;
+        mGv.setColumnWidth(w);
+        mGv.setNumColumns(3);
+        mPicAdapter = new PicAdapter(this,mList,w);
+        mGv.setAdapter(mPicAdapter);
+    }
+
+    private void initAction() {
+        findViewById(R.id.btn_select_pic).setOnClickListener(this);
     }
 
     private void getImages() {
+        mList.clear();
+        int mPicsSize;
         if (!Environment.getExternalStorageState().equals(
                 Environment.MEDIA_MOUNTED))
         {
@@ -54,42 +74,39 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 String firstName = null;
                 Uri imageUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
                 ContentResolver cr = MainActivity.this.getContentResolver();
-                Cursor cursor = cr.query(imageUri,null,MediaStore.Images.Media.CONTENT_TYPE + "=? or" + MediaStore.Images.Media.CONTENT_TYPE + "=?",
-                        new String[]{"iamge/jpeg","image/png"},MediaStore.Images.Media.DATE_MODIFIED);
+//                String selection = MediaStore.Images.Media.MIME_TYPE + "=? or " +MediaStore.Images.Media.MIME_TYPE + "=? or "+ MediaStore.Images.Media.MIME_TYPE + "=?";
+//                String[] selectionArgs = new String[]{"iamge/jpg","image/png","image/jpeg"};
+                String selection = MediaStore.Images.Media.MIME_TYPE + "=?";
+                String[] selectionArgs = new String[]{"image/png"};
+                Cursor cursor = cr.query(imageUri,null,selection,
+                        selectionArgs ,MediaStore.Images.Media.DATE_MODIFIED);
                 while(cursor.moveToNext()){
                     String path = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
-                    if(null == firstName){
-                        firstName = path;
-                    }
-                    File parentFile = new File(path).getParentFile();
-                    if(null == parentFile){
-                        continue;
-                    }
-                    String dirPath = parentFile.getAbsolutePath();
-                    ImageFloder imageFloder = null;
-                    imageFloder.setDir(dirPath);
-                    imageFloder.setFirstImagePath(path);
-                    
+                    String tempPath = new File(path).getAbsolutePath();
+                    mList.add(tempPath);
                 }
-
+                cursor.close();
+                //TODO()
+                mHandler.sendEmptyMessage(0);
             }
         }).start();
-
-
     }
+
+    private Handler mHandler = new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            mPicAdapter.notifyDataSetChanged();
+        }
+    };
 
     @Override
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.btn_select_pic:
-                Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                startActivityForResult(intent,0);
+                getImages();
                 break;
         }
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-    }
 }
