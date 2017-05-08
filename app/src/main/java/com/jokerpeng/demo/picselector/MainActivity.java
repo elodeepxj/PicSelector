@@ -20,7 +20,7 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private MyGridView mGv;
-    private List<String> mList;
+    private List<File> mList;
     private PicAdapter mPicAdapter;
 
     @Override
@@ -74,16 +74,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 String firstName = null;
                 Uri imageUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
                 ContentResolver cr = MainActivity.this.getContentResolver();
-//                String selection = MediaStore.Images.Media.MIME_TYPE + "=? or " +MediaStore.Images.Media.MIME_TYPE + "=? or "+ MediaStore.Images.Media.MIME_TYPE + "=?";
-//                String[] selectionArgs = new String[]{"iamge/jpg","image/png","image/jpeg"};
-                String selection = MediaStore.Images.Media.MIME_TYPE + "=?";
-                String[] selectionArgs = new String[]{"image/png"};
+                String selection = MediaStore.Images.Media.MIME_TYPE + "=? or " +MediaStore.Images.Media.MIME_TYPE + "=? or "+ MediaStore.Images.Media.MIME_TYPE + "=?";
+                String[] selectionArgs = new String[]{"iamge/jpg","image/png","image/jpeg"};
+//                String selection = MediaStore.Images.Media.MIME_TYPE + "=?";
+//                String[] selectionArgs = new String[]{"image/png"};
                 Cursor cursor = cr.query(imageUri,null,selection,
                         selectionArgs ,MediaStore.Images.Media.DATE_MODIFIED);
                 while(cursor.moveToNext()){
                     String path = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
                     String tempPath = new File(path).getAbsolutePath();
-                    mList.add(tempPath);
+                    File file = new File(path);
+                    mList.add(file);
                 }
                 cursor.close();
                 //TODO()

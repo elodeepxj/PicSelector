@@ -1,7 +1,6 @@
 package com.jokerpeng.demo.picselector;
 
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
@@ -11,13 +10,14 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.BaseAdapter;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 
+import com.squareup.picasso.Picasso;
+
+import java.io.File;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 
 /**
  * Created by Administrator on 2017/5/5.
@@ -26,11 +26,11 @@ import java.util.Map;
 public class PicAdapter extends BaseAdapter {
     private LayoutInflater mLayoutInflater;
     private Context mContext;
-    private List<String> mList;
+    private List<File> mList;
     private int itemLenght;
     private HashMap<Integer,Boolean> isSelect;
 
-    public PicAdapter(Context context,List<String> list,int lenght) {
+    public PicAdapter(Context context, List<File> list, int lenght) {
         this.mContext = context;
         this.mList = list;
         this.itemLenght = lenght;
@@ -48,7 +48,6 @@ public class PicAdapter extends BaseAdapter {
         for(int i = 0;i < mList.size();i++){
             isSelect.put(i,false);
         }
-        Log.e("33333333333","-------------------"+isSelect.size());
     }
 
     @Override
@@ -76,17 +75,21 @@ public class PicAdapter extends BaseAdapter {
             viewHolder.checkBox = (CheckBox) convertView.findViewById(R.id.box_item);
             AbsListView.LayoutParams params = new AbsListView.LayoutParams(itemLenght,itemLenght);
             convertView.setLayoutParams(params);
-            ViewGroup.LayoutParams ivParams = viewHolder.imageView.getLayoutParams();
-            ivParams.height = itemLenght;
-            ivParams.width = itemLenght;
-            viewHolder.imageView.setLayoutParams(ivParams);
+
+            //picasso设置了resize，这边就不用设置imageview的大小了
+//            ViewGroup.LayoutParams ivParams = viewHolder.imageView.getLayoutParams();
+//            ivParams.height = itemLenght;
+//            ivParams.width = itemLenght;
+//            viewHolder.imageView.setLayoutParams(ivParams);
+
             convertView.setTag(viewHolder);
         }else{
             viewHolder = (ViewHolder) convertView.getTag();
         }
-        String path;
-        path = mList.get(position);
-        viewHolder.imageView.setImageBitmap(imageProcess(path));
+        File file;
+        file = mList.get(position);
+        Picasso.with(mContext).load(file).config(Bitmap.Config.RGB_565).resize(itemLenght,itemLenght).centerCrop().into(viewHolder.imageView);
+//        viewHolder.imageView.setImageBitmap(imageProcess(path));
         viewHolder.checkBox.setChecked(isSelect.get(position));
         viewHolder.checkBox.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -98,7 +101,6 @@ public class PicAdapter extends BaseAdapter {
                 }
             }
         });
-        Log.e("++++++++++",position+"   "+isSelect.get(position));
         return convertView;
     }
 
